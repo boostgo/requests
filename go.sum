@@ -1,0 +1,4 @@
+github.com/boostgo/convert v1.0.1 h1:kAjdulGgoEIEszybSMxGjZPVCqhDGET3FeS2oWaqvkU=
+github.com/boostgo/convert v1.0.1/go.mod h1:KVjvc+yiCbfbIbJpzYOVJ1VPaa2ayPcT6wwD3QggSeI=
+github.com/boostgo/errorx v1.0.1 h1:yUdd61im/odzRkv2eWHBBsPtypW7gtZpgAEbkHdL9ps=
+github.com/boostgo/errorx v1.0.1/go.mod h1:8DeXx9oMR2ieS1PCeJsfbVDIZZaua0XZJgTgU4nuUP4=
