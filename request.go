@@ -5,16 +5,15 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/boostgo/requests/internal/reflectx"
-
 	"github.com/boostgo/convert"
 	"github.com/boostgo/errorx"
+	"github.com/boostgo/httpx"
+	"github.com/boostgo/reflectx"
 )
 
 type RequestOption func(request *http.Request)
@@ -43,15 +42,11 @@ type Request struct {
 	resp     *http.Response
 	response *Response
 
-	errType string
-
 	mx sync.Locker
 }
 
 // R creates Request object with context
 func R(ctx context.Context) *Request {
-	const errType = "Request"
-
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -67,8 +62,6 @@ func R(ctx context.Context) *Request {
 		retryWait:  time.Millisecond * 100,
 
 		options: make([]RequestOption, 0),
-
-		errType: errType,
 
 		mx: &sync.Mutex{},
 	}
@@ -141,7 +134,7 @@ func (request *Request) BasicAuth(username, password string) *Request {
 		return request
 	}
 
-	request.basic = basicAuth{username, password}
+	request.basic = initBasicAuth(username, password)
 	return request
 }
 
@@ -236,8 +229,7 @@ func (request *Request) Cookies(cookies map[string]any) *Request {
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) Do(method, url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "Do")
+func (request *Request) Do(method, url string, body ...any) (*Response, error) {
 	return request.retryDo(method, url, body...)
 }
 
@@ -246,8 +238,7 @@ func (request *Request) Do(method, url string, body ...any) (response *Response,
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) GET(url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "GET")
+func (request *Request) GET(url string, body ...any) (*Response, error) {
 	return request.retryDo(http.MethodGet, url, body...)
 }
 
@@ -256,8 +247,7 @@ func (request *Request) GET(url string, body ...any) (response *Response, err er
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) POST(url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "POST")
+func (request *Request) POST(url string, body ...any) (*Response, error) {
 	return request.retryDo(http.MethodPost, url, body...)
 }
 
@@ -266,8 +256,7 @@ func (request *Request) POST(url string, body ...any) (response *Response, err e
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) PUT(url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "PUT")
+func (request *Request) PUT(url string, body ...any) (*Response, error) {
 	return request.retryDo(http.MethodPut, url, body...)
 }
 
@@ -276,8 +265,7 @@ func (request *Request) PUT(url string, body ...any) (response *Response, err er
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) PATCH(url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "PATCH")
+func (request *Request) PATCH(url string, body ...any) (*Response, error) {
 	return request.retryDo(http.MethodPatch, url, body...)
 }
 
@@ -286,8 +274,7 @@ func (request *Request) PATCH(url string, body ...any) (response *Response, err 
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) DELETE(url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "DELETE")
+func (request *Request) DELETE(url string, body ...any) (*Response, error) {
 	return request.retryDo(http.MethodDelete, url, body...)
 }
 
@@ -296,8 +283,7 @@ func (request *Request) DELETE(url string, body ...any) (response *Response, err
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) OPTIONS(url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "OPTIONS")
+func (request *Request) OPTIONS(url string, body ...any) (*Response, error) {
 	return request.retryDo(http.MethodOptions, url, body...)
 }
 
@@ -306,8 +292,7 @@ func (request *Request) OPTIONS(url string, body ...any) (response *Response, er
 // url - if base url set concat baseURL + url.
 //
 // body - request body. If provide body as FormDataWriter interface - will be used form-data body. Optional
-func (request *Request) HEAD(url string, body ...any) (response *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "HEAD")
+func (request *Request) HEAD(url string, body ...any) (*Response, error) {
 	return request.retryDo(http.MethodHead, url, body...)
 }
 
@@ -337,6 +322,9 @@ func (request *Request) initRequest(method, url string, body ...any) error {
 		} else if bytesWriter, isBytes := body[0].(BytesWriter); isBytes {
 			request.Header("Content-Type", bytesWriter.ContentType())
 			request.req, err = http.NewRequest(method, fullURL, bytesWriter.Reader())
+		} else if formEncodedWriter, isFormEncodedWriter := body[0].(FormUrlEncodedWriter); isFormEncodedWriter {
+			request.Header("Content-Type", httpx.ContentTypeForm)
+			request.req, err = http.NewRequest(method, fullURL, formEncodedWriter.Reader())
 		} else {
 			var bodyBlob []byte
 			bodyBlob, err = json.Marshal(body[0])
@@ -382,11 +370,15 @@ func (request *Request) initRequest(method, url string, body ...any) error {
 }
 
 func (request *Request) retryDo(method, url string, body ...any) (_ *Response, err error) {
-	defer errorx.Wrap(request.errType, &err, "retryDo", map[string]any{
-		"method": method,
-		"url":    url,
-		"body":   len(body) > 0 && body[0] != nil,
-	})
+	defer func() {
+		if err != nil {
+			err = errorx.Wrap(err, ErrRequestRetryDo, map[string]any{
+				"method": method,
+				"url":    url,
+				"body":   len(body) > 0 && body[0] != nil,
+			})
+		}
+	}()
 
 	// block sending request
 	request.mx.Lock()
@@ -396,12 +388,10 @@ func (request *Request) retryDo(method, url string, body ...any) (_ *Response, e
 	select {
 	case <-request.ctx.Done():
 		if err = request.ctx.Err(); err != nil {
-			return nil, errorx.
-				New("Context is done and has error").
-				SetError(err)
+			return nil, ErrContextCanceledAndHasError
 		}
 
-		return nil, errors.New("context is done")
+		return nil, ErrContextCanceled
 	default:
 	}
 
@@ -477,6 +467,7 @@ func (request *Request) do(method, url string, body ...any) error {
 	return nil
 }
 
+//nolint:gosec
 func (request *Request) getClient() *http.Client {
 	if request.client != nil {
 		// return provided client

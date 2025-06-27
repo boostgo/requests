@@ -3,8 +3,6 @@ package requests
 import (
 	"bytes"
 	"io"
-
-	"github.com/boostgo/errorx"
 )
 
 // BytesWriter request body parser implementation.
@@ -23,26 +21,27 @@ type BytesWriter interface {
 type bytesBuffer struct {
 	buffer      *bytes.Buffer
 	contentType string
-	errType     string
 }
 
 // NewBytesWriter creates BytesWriter
 func NewBytesWriter() BytesWriter {
 	const (
 		defaultContentType = "application/octet-stream"
-		errType            = "Bytes Writer"
 	)
 
 	return &bytesBuffer{
 		buffer:      bytes.NewBuffer(make([]byte, 0)),
 		contentType: defaultContentType,
-		errType:     errType,
 	}
 }
 
-func (writer *bytesBuffer) Write(bytes []byte) (n int, err error) {
-	defer errorx.Wrap(writer.errType, &err, "Write")
-	return writer.buffer.Write(bytes)
+func (writer *bytesBuffer) Write(bytes []byte) (int, error) {
+	n, err := writer.buffer.Write(bytes)
+	if err != nil {
+		return 0, ErrBytesWriterWrite.SetError(err)
+	}
+
+	return n, nil
 }
 
 func (writer *bytesBuffer) ContentType() string {

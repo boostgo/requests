@@ -21,18 +21,16 @@ type FormDataWriter interface {
 }
 
 type formData struct {
-	body    bytes.Buffer
-	writer  *multipart.Writer
-	errType string
+	body   bytes.Buffer
+	writer *multipart.Writer
 }
 
 // NewFormData creates FormDataWriter
+//
+//nolint:errcheck
 func NewFormData(initial ...map[string]any) FormDataWriter {
-	const errType = "Form Data Writer"
-
 	fd := &formData{
-		body:    bytes.Buffer{},
-		errType: errType,
+		body: bytes.Buffer{},
 	}
 
 	fd.writer = multipart.NewWriter(&fd.body)
@@ -44,13 +42,20 @@ func NewFormData(initial ...map[string]any) FormDataWriter {
 	return fd
 }
 
-func (fd *formData) Add(key string, value any) (err error) {
-	defer errorx.Wrap(fd.errType, &err, "Add")
-	return fd.writer.WriteField(key, convert.String(value))
+func (fd *formData) Add(key string, value any) error {
+	if err := fd.writer.WriteField(key, convert.String(value)); err != nil {
+		return ErrFormDataWriterAdd.SetError(err)
+	}
+
+	return nil
 }
 
 func (fd *formData) AddFile(name, fileName string, file []byte) (err error) {
-	defer errorx.Wrap(fd.errType, &err, "AddFile")
+	defer func() {
+		if err != nil {
+			err = errorx.Wrap(err, ErrFormDataWriterAddFile)
+		}
+	}()
 
 	fileWriter, err := fd.writer.CreateFormFile(name, fileName)
 	if err != nil {
@@ -66,7 +71,11 @@ func (fd *formData) AddFile(name, fileName string, file []byte) (err error) {
 }
 
 func (fd *formData) Set(data map[string]any) (err error) {
-	defer errorx.Wrap(fd.errType, &err, "Set")
+	defer func() {
+		if err != nil {
+			err = errorx.Wrap(err, ErrFormDataWriterSet)
+		}
+	}()
 
 	if data == nil || len(data) == 0 {
 		return nil
@@ -93,7 +102,10 @@ func (fd *formData) Buffer() *bytes.Buffer {
 	return &fd.body
 }
 
-func (fd *formData) Close() (err error) {
-	defer errorx.Wrap(fd.errType, &err, "Close")
-	return fd.writer.Close()
+func (fd *formData) Close() error {
+	if err := fd.writer.Close(); err != nil {
+		return ErrFormDataWriterClose.SetError(err)
+	}
+
+	return nil
 }

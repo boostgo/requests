@@ -1,4 +1,10 @@
-github.com/boostgo/convert v1.0.1 h1:kAjdulGgoEIEszybSMxGjZPVCqhDGET3FeS2oWaqvkU=
-github.com/boostgo/convert v1.0.1/go.mod h1:KVjvc+yiCbfbIbJpzYOVJ1VPaa2ayPcT6wwD3QggSeI=
-github.com/boostgo/errorx v1.0.1 h1:yUdd61im/odzRkv2eWHBBsPtypW7gtZpgAEbkHdL9ps=
-github.com/boostgo/errorx v1.0.1/go.mod h1:8DeXx9oMR2ieS1PCeJsfbVDIZZaua0XZJgTgU4nuUP4=
+github.com/boostgo/convert v1.0.2 h1:Auzut+PupfR5K2Njpd7qL6ZaXxEI5/iBrxyXThpRgkM=
+github.com/boostgo/convert v1.0.2/go.mod h1:KVjvc+yiCbfbIbJpzYOVJ1VPaa2ayPcT6wwD3QggSeI=
+github.com/boostgo/errorx v1.0.2 h1:qPfy1JapMkUuhOMawSCKHW+1Qz4QGnSs0OExx9xJ/K0=
+github.com/boostgo/errorx v1.0.2/go.mod h1:Sn0i3MVdlCUa3CrB2iie4a/RiKMlIavOSEV0Xz+R/GU=
+github.com/boostgo/httpx v1.0.0 h1:teqYoBTsge4L5oxw+fQ0BPJYMokhQwkyWfv8RSvD4Lg=
+github.com/boostgo/httpx v1.0.0/go.mod h1:CuIJY4Ky7/qUcGMbch8A7Chqhj4tfpm8Sc5te5z57Hg=
+github.com/boostgo/reflectx v1.0.0 h1:IZh0EIFWipYxY7zhnIpnr8g3HFvNUc17kcwLCtg+508=
+github.com/boostgo/reflectx v1.0.0/go.mod h1:mp/blBV2ExiFGOy1EImO6tIBmlhZBscqZWU0XDjJPDc=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

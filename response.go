@@ -6,9 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/boostgo/requests/internal/reflectx"
-
-	"github.com/boostgo/errorx"
+	"github.com/boostgo/reflectx"
 )
 
 type Response struct {
@@ -50,12 +48,7 @@ func (response *Response) Parse(export any) error {
 	}
 
 	if err := json.Unmarshal(response.bodyBlob, export); err != nil {
-		return errorx.
-			New("Unmarshal response body").
-			SetError(err).
-			AddContext("url", response.request.req.RequestURI).
-			AddContext("code", response.raw.StatusCode).
-			AddContext("blob", response.bodyBlob)
+		return newParseResponseBodyError(response.request.req.RequestURI, response.raw.StatusCode, response.bodyBlob)
 	}
 
 	return nil

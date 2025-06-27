@@ -107,7 +107,7 @@ func (client *Client) BasicAuth(username, password string) *Client {
 		return client
 	}
 
-	client.basic = basicAuth{username, password}
+	client.basic = initBasicAuth(username, password)
 	return client
 }
 
