@@ -3,9 +3,9 @@ package requests
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
+	"github.com/boostgo/httpx"
 	"github.com/boostgo/reflectx"
 )
 
@@ -43,8 +43,8 @@ func (response *Response) Parse(export any) error {
 		return nil
 	}
 
-	if !reflectx.IsPointer(export) {
-		return errors.New("provided export is not a pointer")
+	if err := reflectx.CheckExport(export); err != nil {
+		return err
 	}
 
 	if err := json.Unmarshal(response.bodyBlob, export); err != nil {
@@ -60,4 +60,8 @@ func (response *Response) Context(ctx context.Context) context.Context {
 
 func (response *Response) ContentType() string {
 	return response.raw.Header.Get("Content-Type")
+}
+
+func (response *Response) IsFailure() bool {
+	return httpx.IsFailureCode(response.StatusCode())
 }

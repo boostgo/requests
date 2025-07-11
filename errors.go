@@ -3,10 +3,9 @@ package requests
 import "github.com/boostgo/errorx"
 
 var (
-	ErrParseResponseBody           = errorx.New("response.parse_body")
-	ErrExportResponseMustBePointer = errorx.New("response.export_must_be_pointer")
-	ErrContextCanceledAndHasError  = errorx.New("context.canceled_and_has_error")
-	ErrContextCanceled             = errorx.New("context.canceled")
+	ErrParseResponseBody          = errorx.New("response.parse_body")
+	ErrContextCanceledAndHasError = errorx.New("context.canceled_and_has_error")
+	ErrContextCanceled            = errorx.New("context.canceled")
 
 	ErrBytesWriterWrite      = errorx.New("bytes_writer.write")
 	ErrFormDataWriterAdd     = errorx.New("formdata_writer.add")

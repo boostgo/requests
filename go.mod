@@ -7,7 +7,7 @@ toolchain go1.23.7
 require (
 	github.com/boostgo/errorx v1.0.2
 	github.com/boostgo/httpx v1.0.0
-	github.com/boostgo/reflectx v1.0.0
+	github.com/boostgo/reflectx v1.0.2
 )
 
 require github.com/boostgo/convert v1.0.2

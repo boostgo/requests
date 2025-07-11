@@ -318,13 +318,13 @@ func (request *Request) initRequest(method, url string, body ...any) error {
 			if err = formDataWriter.Close(); err != nil {
 				return err
 			}
-			request.req, err = http.NewRequest(method, fullURL, formDataWriter.Buffer())
+			request.req, err = http.NewRequestWithContext(request.ctx, method, fullURL, formDataWriter.Buffer())
 		} else if bytesWriter, isBytes := body[0].(BytesWriter); isBytes {
 			request.Header("Content-Type", bytesWriter.ContentType())
-			request.req, err = http.NewRequest(method, fullURL, bytesWriter.Reader())
+			request.req, err = http.NewRequestWithContext(request.ctx, method, fullURL, bytesWriter.Reader())
 		} else if formEncodedWriter, isFormEncodedWriter := body[0].(FormUrlEncodedWriter); isFormEncodedWriter {
 			request.Header("Content-Type", httpx.ContentTypeForm)
-			request.req, err = http.NewRequest(method, fullURL, formEncodedWriter.Reader())
+			request.req, err = http.NewRequestWithContext(request.ctx, method, fullURL, formEncodedWriter.Reader())
 		} else {
 			var bodyBlob []byte
 			bodyBlob, err = json.Marshal(body[0])
@@ -332,10 +332,10 @@ func (request *Request) initRequest(method, url string, body ...any) error {
 				return err
 			}
 
-			request.req, err = http.NewRequest(method, fullURL, bytes.NewReader(bodyBlob))
+			request.req, err = http.NewRequestWithContext(request.ctx, method, fullURL, bytes.NewReader(bodyBlob))
 		}
 	} else {
-		request.req, err = http.NewRequest(method, fullURL, nil)
+		request.req, err = http.NewRequestWithContext(request.ctx, method, fullURL, nil)
 	}
 	if err != nil {
 		return err
